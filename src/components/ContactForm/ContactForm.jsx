@@ -1,95 +1,89 @@
-import { Component } from 'react';
+import { Formik, Field } from 'formik';
+import * as Yup from 'yup';
+import 'yup-phone-lite';
 import { nanoid } from 'nanoid';
 import PropTypes from 'prop-types';
 import {
   Form,
   FormField,
   Wrapper,
+  Input,
   FormLabel,
-  FormInput,
+  ErrorMessage,
   FormButton,
 } from './ContactForm.styled';
 import { BsFillPersonFill } from 'react-icons/bs';
 import { GiSmartphone } from 'react-icons/gi';
-export default class ContactForm extends Component {
-  state = {
-    name: '',
-    number: '',
-  };
 
-  handleSubmit = e => {
-    e.preventDefault();
-    this.props.onSubmit(this.state.name, this.state.number);
+const ContactSchema = Yup.object({
+  name: Yup.string()
+    .min(2, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('Name is required!'),
+  number: Yup.string().phone('UA').required('Phone number is required!'),
+});
+export const ContactForm = ({ onSave }) => {
+  return (
+    <Formik
+      initialValues={{
+        name: '',
+        number: '',
+      }}
+      validationSchema={ContactSchema}
+      onSubmit={(values, actions) => {
+        onSave({ ...values, id: nanoid() });
+        actions.resetForm();
+      }}
+    >
+      <Form>
+        <FormField>
+          <FormLabel>Name</FormLabel>
+          <Wrapper>
+            <Field name="name">
+              {({ field }) => {
+                return <Input {...field} placeholder="your name" />;
+              }}
+            </Field>
 
-    this.setState({ name: '', number: '' });
-  };
+            <BsFillPersonFill
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '10px',
+                transform: 'translateY(-50%)',
+              }}
+            />
+          </Wrapper>
+          <ErrorMessage name="name" component="div" />
+        </FormField>
+        <FormField>
+          <FormLabel>Number</FormLabel>
+          <Wrapper>
+            <Field name="number">
+              {({ field }) => {
+                return <Input {...field} placeholder="+38-0xx-xxx-xx-xx" />;
+              }}
+            </Field>
+            <GiSmartphone
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '10px',
+                transform: 'translateY(-50%)',
+              }}
+            />
+          </Wrapper>
+          <ErrorMessage name="number" component="div" />
+        </FormField>
 
-  handleChange = e => {
-    const { name, value } = e.currentTarget;
-    this.setState({ [name]: value });
-  };
+        <FormButton type="submit">Add contact</FormButton>
+      </Form>
+    </Formik>
+  );
+};
 
-  nameInput = nanoid();
-  telInput = nanoid();
-
-  render() {
-    const { name, number } = this.state;
-    return (
-      <>
-        <Form action="" onSubmit={this.handleSubmit}>
-          <FormField>
-            <FormLabel htmlFor={this.nameInput}>Name</FormLabel>
-            <Wrapper>
-              <FormInput
-                type="text"
-                name="name"
-                id={this.nameInput}
-                value={name}
-                onChange={this.handleChange}
-                pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-                title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-                required
-              />{' '}
-              <BsFillPersonFill
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '10px',
-                  transform: 'translateY(-50%)',
-                }}
-              />
-            </Wrapper>
-          </FormField>
-          <FormField>
-            <FormLabel htmlFor={this.telInput}>Number</FormLabel>
-            <Wrapper>
-              <FormInput
-                type="tel"
-                name="number"
-                id={this.telInput}
-                value={number}
-                onChange={this.handleChange}
-                pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-                title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-                required
-              />
-              <GiSmartphone
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '10px',
-                  transform: 'translateY(-50%)',
-                }}
-              />
-            </Wrapper>
-          </FormField>
-          <FormButton type="submit">Add contact</FormButton>
-        </Form>
-      </>
-    );
-  }
-}
+export default ContactForm;
 
 ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };
